@@ -34,7 +34,7 @@ Usage
 
 `make help ` - prints help message
 
-Recipies
+Recipes
 --------
 The following command runs tests on 60-Core Intel Xeon Phi:
 
