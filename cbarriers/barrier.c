@@ -143,7 +143,7 @@ static const char * bar_MachineIdToHostnameMap [ MACHINES_MAX_NUM ] =
     "epsilpon",
     "zeta",
     "eta",
-    "phi",
+    "mic0",
     "omega"
     };
 

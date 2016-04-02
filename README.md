@@ -38,4 +38,4 @@ Recipes
 --------
 The following command runs tests on 60-Core Intel Xeon Phi:
 
-`make test TEST_RUNNER='ssh phi "ulimit -s unlimited;' TEST_RUNNER_PASS_ARG_END='"' HOST_NAME=phi TEST_RUNNER_INIT='scp -r bin phi:;ssh phi "mkdir -p testrep/phi/graphs;ulimit -s unlimited"' TEST_RUNNER_FINI='scp -r phi:testrep/phi/graphs testrep/phi;ssh phi "rm -rf bin"' CC=icc CPUS_NUM=232 EXTRACFLAGS="-mmic" BARRIERS_NUM=10000 ARCH=mic TOPOLOGY_NUMA_AWARE_ALLOC=no THREADS_MIN_NUM=8 THREADS_INC=+=8 RADIX_INC=*=2 EXPERIMENTS_NUM=10`
+`make test TEST_RUNNER='ssh mic0 "ulimit -s unlimited;' TEST_RUNNER_PASS_ARG_END='"' HOST_NAME=mic0 TEST_RUNNER_INIT='scp -r bin mic0:' TEST_RUNNER_FINI='ssh mic0 "rm -rf bin"' CC=icc CPUS_NUM=232 EXTRACFLAGS="-mmic" BARRIERS_NUM=10000 ARCH=mic TOPOLOGY_NUMA_AWARE_ALLOC=no THREADS_MIN_NUM=8 THREADS_INC=+=8 RADIX_INC=*=2 EXPERIMENTS_NUM=10`
