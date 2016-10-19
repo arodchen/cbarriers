@@ -335,7 +335,7 @@ help :
 	@echo "  BARRIERS_NUM={1..N} (1000000) - number of barriers in experiment"
 	@echo "  EXPERIMENTS_NUM={1..N} (10) - number of experiments"
 	@echo "  CCL_SIZE={1..N} (128) - cache coherency line size"
-	@echo "  ARCH={x86_64|armv7l} (shell arch) - target architecture"
+	@echo "  ARCH={x86_64|mic|armv7l} (shell arch) - target architecture"
 	@echo "  HOST_NAME={...} (shell hostname) - target hostname"
 	@echo "  CPU_MAP_PRIORITY_DELTA={1..CPUS_NUM} (1) - priority delta for mapping threads to cpus"
 	@echo "  THREADS_INC={+=1,*=2,...} (+= 1) - compound assignment operator for increment of number of threads"
