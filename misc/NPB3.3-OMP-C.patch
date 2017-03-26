@@ -1,0 +1,400 @@
+diff -r 03d7b2b0e150 -r 877b1c4963e5 benchmarks/NPB3.3-OMP-C/CG/cg.c
+--- a/benchmarks/NPB3.3-OMP-C/CG/cg.c	Wed Mar 19 15:01:58 2014 +0000
++++ b/benchmarks/NPB3.3-OMP-C/CG/cg.c	Mon Oct 17 19:44:50 2016 +0100
+@@ -176,7 +183,10 @@
+   firstcol = 0;
+   lastcol  = NA-1;
+ 
+-  if (NA == 1400 && NONZER == 7 && NITER == 15 && SHIFT == 10) {
++  if (NA == 240 && NONZER == 2 && NITER == 300 && SHIFT == 5) {
++    Class = 'Y';
++    zeta_verify_value = 2.2326607473787;
++  } else if (NA == 1400 && NONZER == 7 && NITER == 15 && SHIFT == 10) {
+     Class = 'S';
+     zeta_verify_value = 8.5971775078648;
+   } else if (NA == 7000 && NONZER == 8 && NITER == 15 && SHIFT == 12) {
+diff -r 03d7b2b0e150 -r 877b1c4963e5 benchmarks/NPB3.3-OMP-C/MG/mg.c
+--- a/benchmarks/NPB3.3-OMP-C/MG/mg.c	Wed Mar 19 15:01:58 2014 +0000
++++ b/benchmarks/NPB3.3-OMP-C/MG/mg.c	Mon Oct 17 19:44:50 2016 +0100
+@@ -165,6 +165,8 @@
+ 
+   if ( (nx[lt] != ny[lt]) || (nx[lt] != nz[lt]) ) {
+     Class = 'U';
++  } else if ( nx[lt] == 16 && nit == 800 ) {
++    Class = 'Y';
+   } else if ( nx[lt] == 32 && nit == 4 ) {
+     Class = 'S';
+   } else if ( nx[lt] == 128 && nit == 4 ) {
+@@ -293,7 +295,9 @@
+ 
+   epsilon = 1.0e-8;
+   if (Class != 'U') {
+-    if (Class == 'S') {
++    if (Class == 'Y') {
++      verify_value = 7.7365776202089E-18;
++    } else if (Class == 'S') {
+       verify_value = 0.5307707005734e-04;
+     } else if (Class == 'W') {
+       verify_value = 0.6467329375339e-05;
+@@ -496,7 +500,7 @@
+   double r1[M], r2[M];
+ 
+   if (timeron) timer_start(T_psinv);
+-  #pragma omp parallel for default(shared) private(i1,i2,i3,r1,r2)
++  #pragma omp parallel for default(shared) private(i1,i2,i3,r1,r2) collapse(2)
+   for (i3 = 1; i3 < n3-1; i3++) {
+     for (i2 = 1; i2 < n2-1; i2++) {
+       for (i1 = 0; i1 < n1; i1++) {
+@@ -559,7 +563,7 @@
+   double u1[M], u2[M];
+ 
+   if (timeron) timer_start(T_resid);
+-  #pragma omp parallel for default(shared) private(i1,i2,i3,u1,u2)
++  #pragma omp parallel for default(shared) private(i1,i2,i3,u1,u2) collapse(2)
+   for (i3 = 1; i3 < n3-1; i3++) {
+     for (i2 = 1; i2 < n2-1; i2++) {
+       for (i1 = 0; i1 < n1; i1++) {
+@@ -638,10 +642,10 @@
+   }
+ 
+   #pragma omp parallel for default(shared) \
+-                           private(j1,j2,j3,i1,i2,i3,x1,y1,x2,y2)
++                           private(j1,j2,j3,i1,i2,i3,x1,y1,x2,y2) collapse(2)
+   for (j3 = 1; j3 < m3j-1; j3++) {
+-    i3 = 2*j3-d3;
+     for (j2 = 1; j2 < m2j-1; j2++) {
++      i3 = 2*j3-d3;
+       i2 = 2*j2-d2;
+ 
+       for (j1 = 1; j1 < m1j; j1++) {
+@@ -707,7 +711,7 @@
+ 
+   if (timeron) timer_start(T_interp);
+   if (n1 != 3 && n2 != 3 && n3 != 3) {
+-    #pragma omp parallel for default(shared) private(i1,i2,i3,z1,z2,z3)
++    #pragma omp parallel for default(shared) private(i1,i2,i3,z1,z2,z3) collapse(2)
+     for (i3 = 0; i3 < mm3-1; i3++) {
+       for (i2 = 0; i2 < mm2-1; i2++) {
+         for (i1 = 0; i1 < mm1; i1++) {
+@@ -769,7 +773,7 @@
+ 
+     #pragma omp parallel default(shared) private(i1,i2,i3)
+     {
+-    #pragma omp for
++    #pragma omp for collapse(2)
+     for (i3 = d3; i3 <= mm3-1; i3++) {
+       for (i2 = d2; i2 <= mm2-1; i2++) {
+         for (i1 = d1; i1 <= mm1-1; i1++) {
+@@ -783,6 +787,9 @@
+             + 0.5 * (z[i3-1][i2-1][i1] + z[i3-1][i2-1][i1-1]);
+         }
+       }
++    }
++    #pragma omp for collapse(2)
++    for (i3 = d3; i3 <= mm3-1; i3++) {
+       for (i2 = 1; i2 <= mm2-1; i2++) {
+         for (i1 = d1; i1 <= mm1-1; i1++) {
+           u[2*i3-d3-1][2*i2-t2-1][2*i1-d1-1] = 
+@@ -798,7 +805,7 @@
+       }
+     }
+ 
+-    #pragma omp for nowait
++    #pragma omp for nowait collapse(2)
+     for (i3 = 1; i3 <= mm3-1; i3++) {
+       for (i2 = d2; i2 <= mm2-1; i2++) {
+         for (i1 = d1; i1 <= mm1-1; i1++) {
+@@ -813,6 +820,9 @@
+                     + z[i3-1][i2-1][i1] + z[i3-1][i2-1][i1-1]);
+         }
+       }
++    }
++    #pragma omp for nowait collapse(2)
++    for (i3 = 1; i3 <= mm3-1; i3++) {
+       for (i2 = 1; i2 <= mm2-1; i2++) {
+         for (i1 = d1; i1 <= mm1-1; i1++) {
+           u[2*i3-t3-1][2*i2-t2-1][2*i1-d1-1] = 
+@@ -872,7 +882,7 @@
+   #pragma omp parallel default(shared) private(i1,i2,i3,a) reduction(+:s)
+   {
+     double my_rnmu = 0.0;
+-    #pragma omp for nowait
++    #pragma omp for nowait collapse(2)
+     for (i3 = 1; i3 < n3-1; i3++) {
+       for (i2 = 1; i2 < n2-1; i2++) {
+         for (i1 = 1; i1 < n1-1; i1++) {
+@@ -920,22 +930,23 @@
+   if (timeron) timer_start(T_comm3);
+   #pragma omp parallel default(shared) private(i1,i2,i3)
+   {
+-  #pragma omp for
++  #pragma omp for collapse(2)
+   for (i3 = 1; i3 < n3-1; i3++) {
+     for (i2 = 1; i2 < n2-1; i2++) {
+       u[i3][i2][   0] = u[i3][i2][n1-2];
+       u[i3][i2][n1-1] = u[i3][i2][   1];
+     }
+-//  }
++  }
+ 
+-//  for (i3 = 1; i3 < n3-1; i3++) {
++  #pragma omp for collapse(2)
++  for (i3 = 1; i3 < n3-1; i3++) {
+     for (i1 = 0; i1 < n1; i1++) {
+       u[i3][   0][i1] = u[i3][n2-2][i1];
+       u[i3][n2-1][i1] = u[i3][   1][i1];
+     }
+   }
+ 
+-  #pragma omp for nowait
++  #pragma omp for nowait collapse(2)
+   for (i2 = 0; i2 < n2; i2++) {
+     for (i1 = 0; i1 < n1; i1++) {
+       u[   0][i2][i1] = u[n3-2][i2][i1];
+@@ -1030,20 +1041,19 @@
+     j3[i][0] = 0;
+   }
+ 
+-  #pragma omp for
++  #pragma omp for collapse(2)
+   for (i3 = 1; i3 < n3-1; i3++) {
+-    double (*zi3)[n1] = z[i3];
+     for (i2 = 1; i2 < n2-1; i2++) {
+       for (i1 = 1; i1 < n1-1; i1++) {
+-        if (zi3[i2][i1] > ten[0][1]) {
+-          ten[0][1] = zi3[i2][i1];
++        if (z[i3][i2][i1] > ten[0][1]) {
++          ten[0][1] = z[i3][i2][i1];
+           j1[0][1] = i1;
+           j2[0][1] = i2;
+           j3[0][1] = i3;
+           bubble(ten, j1, j2, j3, mm, 1);
+         }
+-        if (zi3[i2][i1] < ten[0][0]) {
+-          ten[0][0] = zi3[i2][i1];
++        if (z[i3][i2][i1] < ten[0][0]) {
++          ten[0][0] = z[i3][i2][i1];
+           j1[0][0] = i1;
+           j2[0][0] = i2;
+           j3[0][0] = i3;
+@@ -1153,7 +1163,7 @@
+   }
+   */
+ 
+-  #pragma omp parallel for default(shared) private(i1,i2,i3)
++  #pragma omp parallel for default(shared) private(i1,i2,i3) collapse(2)
+   for (i3 = 0; i3 < n3; i3++) {
+     for (i2 = 0; i2 < n2; i2++) {
+       for (i1 = 0; i1 < n1; i1++) {
+@@ -1289,7 +1299,7 @@
+ 
+   int i1, i2, i3;
+ 
+-  #pragma omp parallel for default(shared) private(i1,i2,i3)
++  #pragma omp parallel for default(shared) private(i1,i2,i3) collapse(2)
+   for (i3 = 0; i3 < n3; i3++) {
+     for (i2 = 0; i2 < n2; i2++) {
+       for (i1 = 0; i1 < n1; i1++) {
+diff -r 03d7b2b0e150 -r 877b1c4963e5 benchmarks/NPB3.3-OMP-C/common/c_print_results.c
+--- a/benchmarks/NPB3.3-OMP-C/common/c_print_results.c	Wed Mar 19 15:01:58 2014 +0000
++++ b/benchmarks/NPB3.3-OMP-C/common/c_print_results.c	Mon Oct 17 19:44:50 2016 +0100
+@@ -57,7 +57,7 @@
+ 
+     printf( " Iterations      =             %12d\n", niter );
+  
+-    printf( " Time in seconds =             %12.2f\n", t );
++    printf( " Time in seconds =             %12.4f\n", t );
+ 
+     printf( " Total threads   =             %12d\n", num_threads);
+ 
+diff -r 03d7b2b0e150 -r 877b1c4963e5 benchmarks/NPB3.3-OMP-C/common/print_results.c
+--- a/benchmarks/NPB3.3-OMP-C/common/print_results.c	Wed Mar 19 15:01:58 2014 +0000
++++ b/benchmarks/NPB3.3-OMP-C/common/print_results.c	Mon Oct 17 19:44:50 2016 +0100
+@@ -56,7 +62,7 @@
+   }
+ 
+   printf( " Iterations      =             %12d\n", niter );
+-  printf( " Time in seconds =             %12.2lf\n", t );
++  printf( " Time in seconds =             %12.6lf\n", t );
+ 
+   printf( " Total threads   =             %12d\n", num_threads );
+   printf( " Avail threads   =             %12d\n", max_threads );
+diff -r 03d7b2b0e150 -r 877b1c4963e5 benchmarks/NPB3.3-OMP-C/config/suite.def
+--- a/benchmarks/NPB3.3-OMP-C/config/suite.def	Wed Mar 19 15:01:58 2014 +0000
++++ b/benchmarks/NPB3.3-OMP-C/config/suite.def	Mon Oct 17 19:44:50 2016 +0100
+@@ -10,62 +10,68 @@
+ #  are likely not practical to run in serial. See README.install).
+ # No blank lines. 
+ # The following example builds serial sample sizes of all benchmarks. 
+-ep S
+-ep W
+-ep A
+-ep B
+-ep C
+ 
+-is S
+-is W
+-is A
+-is B
+-is C
++cg Y
++cg S
++mg Y
++mg S
+ 
+-cg S
+-cg W
+-cg A
+-cg B
+-cg C
++#ep S
++#ep W
++#ep A
++#ep B
++#ep C
+ 
+-mg S
+-mg W
+-mg A
+-mg B
+-mg C
++#is S
++#is W
++#is A
++#is B
++#is C
+ 
+-ft S
+-ft W
+-ft A
+-ft B
+-ft C
++#cg S
++#cg W
++#cg A
++#cg B
++#cg C
+ 
+-sp S
+-sp W
+-sp A
+-sp B
+-sp C
++#mg S
++#mg W
++#mg A
++#mg B
++#mg C
+ 
+-bt S
+-bt W
+-bt A
+-bt B
+-bt C
++#ft S
++#ft W
++#ft A
++#ft B
++#ft C
+ 
+-lu S
+-lu W
+-lu A
+-lu B
+-lu C
++#sp S
++#sp W
++#sp A
++#sp B
++#sp C
+ 
+-dc S
+-dc W
+-dc A
+-dc B
+-dc C
++#bt S
++#bt W
++#bt A
++#bt B
++#bt C
+ 
+-ua S
+-ua W
+-ua A
+-ua B
+-ua C
++#lu S
++#lu W
++#lu A
++#lu B
++#lu C
++
++#dc S
++#dc W
++#dc A
++#dc B
++#dc C
++
++#ua S
++#ua W
++#ua A
++#ua B
++#ua C
+diff -r 03d7b2b0e150 -r 877b1c4963e5 benchmarks/NPB3.3-OMP-C/sys/setparams.c
+--- a/benchmarks/NPB3.3-OMP-C/sys/setparams.c	Wed Mar 19 15:01:58 2014 +0000
++++ b/benchmarks/NPB3.3-OMP-C/sys/setparams.c	Mon Oct 17 19:44:50 2016 +0100
+@@ -176,7 +176,8 @@
+ {
+ 
+   /* check class */
+-  if (class != 'S' && 
++  if (class != 'Y' &&
++      class != 'S' && 
+       class != 'W' && 
+       class != 'A' && 
+       class != 'B' && 
+@@ -188,6 +189,10 @@
+     exit(1);
+   }
+ 
++  if (class == 'Y' && (type != CG) && (type != MG)) {
++    printf("setparams: Benchmark class %c is defined only for CG and MG\n", class);
++    exit(1);
++  }
+   if (class == 'E' && (type == IS || type == UA || type == DC)) {
+     printf("setparams: Benchmark class %c not defined for IS, UA, or DC\n", class);
+     exit(1);
+@@ -479,7 +484,9 @@
+ {
+   int problem_size, nit, log2_size, lt_default, lm;
+   int ndim1, ndim2, ndim3;
+-  if      (class == 'S') { problem_size = 32; nit = 4; }
++  
++  if      (class == 'Y') { problem_size = 16; nit = 800; }
++  else if (class == 'S') { problem_size = 32; nit = 4; }
+ /*  else if (class == 'W') { problem_size = 64; nit = 40; }*/
+   else if (class == 'W') { problem_size = 128; nit = 4; }
+   else if (class == 'A') { problem_size = 256; nit = 4; }
+@@ -541,7 +548,8 @@
+ {
+   int na,nonzer,niter;
+   char *shift,*rcond="1.0e-1";
+-  char *shiftS="10.0",
++  char *shiftY="5.0",
++       *shiftS="10.0",
+        *shiftW="12.0",
+        *shiftA="20.0",
+        *shiftB="60.0",
+@@ -549,8 +557,9 @@
+        *shiftD="500.0",
+        *shiftE="1.5e3";
+ 
+-
+-  if( class == 'S' )
++  if ( class == 'Y' )
++  { na=240; nonzer=2; niter=300; shift=shiftY; }
++  else if( class == 'S' )
+   { na=1400; nonzer=7; niter=15; shift=shiftS; }
+   else if( class == 'W' )
+   { na=7000; nonzer=8; niter=15; shift=shiftW; }
