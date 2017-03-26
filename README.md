@@ -6,6 +6,7 @@ Description
 **cbarriers** is a framework for evaluating different barrier synchronization
 algorithms. It was written to evaluate hybrid barrier with other known
 barrier synchronization algorithms. You can find more details in the paper:
+
 *"Effective Barrier Synchronization on Intel Xeon Phi Coprocessor",
 Andrey Rodchenko, Andy Nisbet, Antoniu Pop and Mikel Lujan, Euro-Par 2015* [(paper)](http://dx.doi.org/10.1007/978-3-662-48096-0_45) [(slides)](http://apt.cs.manchester.ac.uk/people/arodchenko/Effective_Barrier_Synchronization_on_Intel_Xeon_Phi_Coprocessor_Slides.pdf).
 
