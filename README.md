@@ -44,4 +44,4 @@ The following command runs tests on 60-Core Intel Xeon Phi:
 
 Updates
 -------
-Refined utilization of non-globally straming stores under `#define ARCH_STORE_NR_NGO_REFINED'.
+Refined utilization of non-globally straming stores under `#define ARCH_STORE_NR_NGO_REFINED` (`ARCH_STORE_NR` should be undefined).
