@@ -671,7 +671,9 @@ store_nr_ngo_int( void * addr,
     __m512i siVec = _mm512_set1_epi32( data);
 
     _mm512_storenrngo_ps( addr, _mm512_castsi512_ps( siVec));
+#   ifndef ARCH_STORE_NR_NGO_REFINED
     asm volatile( "lock; addl $0,(%rsp)\n");
+#   endif
 }
 
 static inline void
@@ -689,7 +691,9 @@ store_nr_ngo_int_max_ma( void * addr,
 
     bar_Assert( sizeof( __int64) <= HW_MAX_MA_SIZE_IN_BITS);
     _mm512_storenrngo_ps( addr, _mm512_castsi512_ps( siVec));
+#   ifndef ARCH_STORE_NR_NGO_REFINED
     asm volatile( "lock; addl $0,(%rsp)\n");
+#   endif
 }
 #   endif /* ARCH_MIC */
 #endif /* ARCH_STORE_NR_NGO */
@@ -1051,11 +1055,15 @@ static inline void
 sr_barrier_set_count( volatile bool * addr,
                       int count)
 {
-#ifdef ARCH_STORE_NR
-    store_nr_int( (void *) addr, count);
+#ifdef ARCH_STORE_NR_NGO
+    store_nr_ngo_int( (void *) addr, count);
 #else
+#   ifdef ARCH_STORE_NR
+    store_nr_int( (void *) addr, count);
+#   else
     (* addr) = count;
-#endif 
+#   endif 
+#endif
 }
 
 #ifdef DSMNH_BARRIER
@@ -1080,6 +1088,10 @@ sr_barrier_wait( sr_barrier_t * sr_barrier,
         dsmn_barrier_wait( & bar_dsmnBarrier [ sr_barrier->barrierId ], tlsData->dsmnTlsData);
 #endif
         sr_barrier_set_count( & (sr_barrier->count), sr_barrier->threadsNum);
+        asm volatile("": : :"memory");
+#ifdef ARCH_STORE_NR_NGO_REFINED
+        asm volatile( "lock; addl $0,(%rsp)\n");
+#endif
         sr_barrier_set_sense( & (sr_barrier->sense), currSense);
 #ifdef WFE_SPINNING
         spinning_thread_wfe_send( );
@@ -1106,6 +1118,9 @@ sr_barrier_wait( sr_barrier_t * sr_barrier,
         };
     }
     sr_barrier_set_sense( senseP, !currSense);
+#ifdef ARCH_STORE_NR_NGO_REFINED
+    asm volatile( "lock; addl $0,(%rsp)\n");
+#endif
 }
 #endif /* SR_BARRIER || DSMNH_BARRIER */
 
@@ -1640,7 +1655,7 @@ static inline void
 tree_barrier_set_sense( volatile bool * addr,
                         bool sense)
 {
-#if defined( ARCH_STORE_NR_NGO)
+#ifdef ARCH_STORE_NR_NGO
     store_nr_ngo_bool( (void *) addr, sense);
 #else
 #   ifdef ARCH_STORE_NR
@@ -1655,22 +1670,30 @@ static inline void
 tree_barrier_set_count( volatile int * addr,
                         int count)
 {
-#ifdef ARCH_STORE_NR
-    store_nr_int( (void *) addr, count);
+#ifdef ARCH_STORE_NR_NGO
+    store_nr_ngo_int( (void *) addr, count);
 #else
+#   ifdef ARCH_STORE_NR
+    store_nr_int( (void *) addr, count);
+#   else
     (* addr) = count;
-#endif 
+#   endif 
+#endif
 }
 
 static inline void
 tree_barrier_set_full( int_max_ma_vol_t * addr,
                        int_max_ma_t full)
 {
-#ifdef ARCH_STORE_NR
-    store_nr_int_max_ma( (void *) addr, full);
+#ifdef ARCH_STORE_NR_NGO
+    store_nr_ngo_int_max_ma( (void *) addr, full);
 #else
+#   ifdef ARCH_STORE_NR
+    store_nr_int_max_ma( (void *) addr, full);
+#   else
     (* addr) = full;
-#endif 
+#   endif 
+#endif
 }
 
 static inline int_max_ma_t
@@ -1765,7 +1788,7 @@ tree_barrier_wait( tree_barrier_t * tree_barrier,
 #endif /* TRNM_BARRIER */
 #ifdef T_GLOBAL_SENSE
 #   ifdef COMBINED_BARRIER
-        node->count = node->threadsNum;
+        tree_barrier_set_count( & (node->count), node->threadsNum);
 #   endif
 #endif
         if ( node->parent )
@@ -1773,11 +1796,21 @@ tree_barrier_wait( tree_barrier_t * tree_barrier,
             tree_barrier_wait( tree_barrier, tlsData, node->parent);
         }
 #ifdef T_GLOBAL_SENSE
+#   ifdef COMBINED_BARRIER
+        asm volatile("": : :"memory");
+#       ifdef ARCH_STORE_NR_NGO_REFINED
+        asm volatile( "lock; addl $0,(%rsp)\n");
+#       endif
+#   endif
         tree_barrier_set_sense( tree_barrier->sense, currSense);
 #endif
 #ifdef T_LOCAL_SENSE
 #   ifdef COMBINED_BARRIER
         tree_barrier_set_count( & (node->count), node->threadsNum);
+        asm volatile("": : :"memory");
+#       ifdef ARCH_STORE_NR_NGO_REFINED
+        asm volatile( "lock; addl $0,(%rsp)\n");
+#       endif
 #   endif
         tree_barrier_set_sense( node->sense, currSense);
 #endif
@@ -1817,6 +1850,9 @@ tree_barrier_wait( tree_barrier_t * tree_barrier,
         };
     }
     tree_barrier_set_sense( senseP, !currSense);
+#ifdef ARCH_STORE_NR_NGO_REFINED
+    asm volatile( "lock; addl $0,(%rsp)\n");
+#endif
 }
 #endif /* TREE_BARRIER */
 
@@ -1963,6 +1999,9 @@ dsmn_barrier_wait( dsmn_barrier_t * dsmn_barrier,
         dsmn_barrier_set_tls_sense( & (dsmn_barrier_tls_data->sense [ barrierId ].data), !s);
     }
     dsmn_barrier_set_tls_parity( & (dsmn_barrier_tls_data->parity [ barrierId ].data), PARITY_ODD - p);
+#if defined( DSMN_BARRIER) && defined( ARCH_STORE_NR_NGO_REFINED)
+    asm volatile( "lock; addl $0,(%rsp)\n");
+#endif
 }
 #endif /* DSMN_BARRIER || DSMNH_BARRIER */
 

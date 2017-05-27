@@ -92,6 +92,11 @@
 #   define ARCH_STORE_NR
 /* Turns out to be less favorable decision in comparision with ARCH_STORE_NR */
 //#   define ARCH_STORE_NR_NGO
+/* Turns out to be more favorable decision in comparision with ARCH_STORE_NR */
+//#   define ARCH_STORE_NR_NGO_REFINED
+#   ifdef ARCH_STORE_NR_NGO_REFINED
+#       define ARCH_STORE_NR_NGO
+#   endif
 #   define ARCH_MIC_DELAY 64
 #endif
 #ifdef ARCH_X86_64
