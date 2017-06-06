@@ -23,17 +23,17 @@ Dependencies
 
 Usage
 -----
-`make build` - builds barrier evaluation framework
+`make build` - builds barrier evaluation framework.
 
-`make test ` - runs tests
+`make test ` - runs tests.
 
-`make db   ` - creates data base needed for plotting
+`make db   ` - creates data base needed for plotting.
 
-`make plot ` - plots charts in pdf
+`make plot ` - plots charts in pdf.
 
-`make all  ` - does all mentioned above
+`make all  ` - does all mentioned above.
 
-`make help ` - prints help message
+`make help ` - prints help message.
 
 Recipes
 --------
